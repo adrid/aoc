@@ -1,0 +1,54 @@
+# Day 2
+
+## Init
+
+```elixir
+Mix.install([
+  {:kino, github: "livebook-dev/kino"}
+])
+```
+
+```elixir
+input = Kino.Input.textarea("Input:")
+```
+
+```elixir
+data =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n", trim: true)
+  |> Enum.map(&String.split(&1, "\s"))
+  |> Enum.map(fn [dir, amount] -> {String.to_atom(dir), String.to_integer(amount)} end)
+```
+
+## First part
+
+```elixir
+{depth, h_position} =
+  data
+  |> Enum.reduce({0, 0}, fn {dir, amount}, {depth, h_position} ->
+    case dir do
+      :forward -> {depth, h_position + amount}
+      :down -> {depth + amount, h_position}
+      :up -> {depth - amount, h_position}
+    end
+  end)
+
+depth * h_position
+```
+
+## Second part
+
+```elixir
+{aim, depth, h_position} =
+  data
+  |> Enum.reduce({0, 0, 0}, fn {dir, amount}, {aim, depth, h_position} ->
+    case dir do
+      :forward -> {aim, depth + aim * amount, h_position + amount}
+      :down -> {aim + amount, depth, h_position}
+      :up -> {aim - amount, depth, h_position}
+    end
+  end)
+
+depth * h_position
+```

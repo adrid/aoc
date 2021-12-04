@@ -1,0 +1,109 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Day 1
+
+## Init
+
+```elixir
+Mix.install([
+  {:kino, github: "livebook-dev/kino"}
+])
+```
+
+```output
+:ok
+```
+
+```elixir
+input = Kino.Input.textarea("Input:")
+```
+
+```elixir
+input =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n", trim: true)
+  |> Enum.map(&String.to_integer/1)
+```
+
+```output
+[183, 185, 186, 182, 185, 191, 204, 203, 205, 220, 215, 208, 216, 217, 218, 219, 210, 226, 227, 231,
+ 245, 243, 255, 257, 250, 255, 286, 287, 286, 293, 294, 296, 299, 316, 322, 330, 332, 337, 340, 341,
+ 339, 348, 349, 350, 351, 354, 357, 359, 360, 361, ...]
+```
+
+## First part
+
+```elixir
+{measurments, _} =
+  input
+  |> Enum.map_reduce(nil, fn x, acc ->
+    case acc do
+      nil -> {nil, x}
+      y when x > y -> {:increased, x}
+      y when x < y -> {:decreased, x}
+      y when x < y -> {:decreased, x}
+      _ -> {:same, x}
+    end
+  end)
+
+measurments
+```
+
+```output
+[nil, :increased, :increased, :decreased, :increased, :increased, :increased, :decreased,
+ :increased, :increased, :decreased, :decreased, :increased, :increased, :increased, :increased,
+ :decreased, :increased, :increased, :increased, :increased, :decreased, :increased, :increased,
+ :decreased, :increased, :increased, :increased, :decreased, :increased, :increased, :increased,
+ :increased, :increased, :increased, :increased, :increased, :increased, :increased, :increased,
+ :decreased, :increased, :increased, :increased, :increased, :increased, :increased, :increased,
+ :increased, :increased, ...]
+```
+
+```elixir
+measurments
+|> Enum.frequencies()
+|> get_in([:increased])
+```
+
+```output
+1722
+```
+
+## Second part
+
+```elixir
+{measurments, _} =
+  input
+  |> Enum.chunk_every(3, 1, :discard)
+  |> Enum.map(&Enum.sum/1)
+  |> Enum.map_reduce(nil, fn x, acc ->
+    case acc do
+      nil -> {nil, x}
+      y when x > y -> {:increased, x}
+      y when x < y -> {:decreased, x}
+      y when x < y -> {:decreased, x}
+      _ -> {:same, x}
+    end
+  end)
+```
+
+```output
+{[nil, :decreased, :same, :increased, :increased, :increased, :increased, :increased, :increased,
+  :increased, :decreased, :increased, :increased, :increased, :decreased, :increased, :increased,
+  :increased, :increased, :increased, :increased, :increased, :increased, :same, :increased,
+  :increased, :increased, :increased, :increased, :increased, :increased, :increased, :increased,
+  :increased, :increased, :increased, :increased, :increased, :increased, :increased, :increased,
+  :increased, :increased, :increased, :increased, :increased, :increased, :increased, :increased,
+  ...], 29576}
+```
+
+```elixir
+measurments
+|> Enum.frequencies()
+|> get_in([:increased])
+```
+
+```output
+1748
+```

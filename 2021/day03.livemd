@@ -1,0 +1,42 @@
+# Day 3
+
+## Init
+
+```elixir
+Mix.install([
+  {:kino, github: "livebook-dev/kino"}
+])
+```
+
+```elixir
+input = Kino.Input.textarea("Input:")
+```
+
+```elixir
+data =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n", trim: true)
+  |> Enum.map(&String.graphemes(&1))
+```
+
+## First part
+
+```elixir
+data
+|> Enum.zip()
+|> Enum.map(fn el ->
+  el
+  |> Tuple.to_list()
+  |> Enum.frequencies()
+end)
+|> Enum.map(fn %{"0" => zeros, "1" => ones} ->
+  if zeros > ones, do: {"0", "1"}, else: {"1", "0"}
+end)
+|> Enum.reduce({"", ""}, fn {gamma, epsilon}, {gamma_value, epsilon_value} ->
+  {gamma_value <> gamma, epsilon_value <> epsilon}
+end)
+|> Tuple.to_list()
+|> Enum.map(&(Integer.parse(&1, 2) |> elem(0)))
+|> Enum.product()
+```
