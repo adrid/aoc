@@ -40,3 +40,51 @@ end)
 |> Enum.map(&(Integer.parse(&1, 2) |> elem(0)))
 |> Enum.product()
 ```
+
+## Second part
+
+```elixir
+defmodule Recur do
+  def recur(_type, list, _pos) when length(list) === 1, do: Enum.at(list, 0)
+
+  def recur(type, list, pos) do
+    new_list =
+      list
+      |> Enum.filter(fn row ->
+        Enum.at(row, pos) === bit(type, list, pos)
+      end)
+
+    recur(type, new_list, pos + 1)
+  end
+
+  defp bit(type, list, pos) do
+    %{"0" => zeros, "1" => ones} =
+      list
+      |> Enum.zip()
+      |> Enum.at(pos)
+      |> Tuple.to_list()
+      |> Enum.frequencies()
+
+    case type do
+      :oxygen -> if ones >= zeros, do: "1", else: "0"
+      :co2 -> if zeros > ones, do: "1", else: "0"
+    end
+  end
+end
+```
+
+```elixir
+oxygen =
+  Recur.recur(:oxygen, data, 0)
+  |> List.to_string()
+  |> Integer.parse(2)
+  |> elem(0)
+
+co2 =
+  Recur.recur(:co2, data, 0)
+  |> List.to_string()
+  |> Integer.parse(2)
+  |> elem(0)
+
+oxygen * co2
+```
