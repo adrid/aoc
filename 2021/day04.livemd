@@ -105,3 +105,87 @@ sum * number
 ```
 
 ## Second part
+
+```elixir
+defmodule Recur do
+  def recur(data, boards) do
+    {number, new_data} = List.pop_at(data, 0)
+
+    new_boards =
+      boards
+      |> Enum.map(fn board ->
+        mark_number(board, number)
+      end)
+
+    if Enum.all?(new_boards, fn {bool_check, _board} -> bool_check end) do
+      last =
+        new_boards
+        |> Enum.filter(fn {bool_check, _board} ->
+          bool_check
+        end)
+        |> Enum.map(fn {_, board} -> board end)
+        |> List.last()
+
+      {number, last}
+    else
+      new_boards =
+        new_boards
+        |> Enum.filter(fn {bool_check, _board} ->
+          bool_check === false
+        end)
+        |> Enum.map(fn {_, board} -> board end)
+
+      recur(new_data, new_boards)
+    end
+  end
+
+  defp mark_number(board, number) do
+    new_board =
+      board
+      |> Enum.map(fn y ->
+        Enum.map(y, fn
+          x when x === number ->
+            :marked
+
+          x ->
+            x
+        end)
+      end)
+
+    {has_bingo(new_board), new_board}
+  end
+
+  defp has_bingo(board) do
+    x_axis =
+      board
+      |> Enum.any?(fn el ->
+        Enum.all?(el, fn i -> i === :marked end)
+      end)
+
+    y_axis =
+      board
+      |> Enum.zip()
+      |> Enum.map(&Tuple.to_list(&1))
+      |> Enum.any?(fn el ->
+        Enum.all?(el, fn i -> i === :marked end)
+      end)
+
+    x_axis || y_axis
+  end
+end
+```
+
+```elixir
+{number, board} = Recur.recur(row, boards)
+
+sum =
+  board
+  |> Enum.reduce(0, fn row, sum ->
+    sum +
+      Enum.reduce(row, 0, fn el, row_sum ->
+        row_sum + if el === :marked, do: 0, else: el
+      end)
+  end)
+
+sum * number
+```
