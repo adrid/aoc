@@ -15,8 +15,6 @@ Mix.install([
 input = Kino.Input.textarea("Input:")
 ```
 
-## First part
-
 ```elixir
 [row | boards] =
   input
@@ -39,6 +37,8 @@ boards =
     end)
   end)
 ```
+
+## First part
 
 ```elixir
 defmodule Recur do
