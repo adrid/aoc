@@ -1,0 +1,107 @@
+<!-- vim: syntax=markdown -->
+
+# Day 4
+
+## Init
+
+```elixir
+Mix.install([
+  {:kino, github: "livebook-dev/kino"},
+  {:nx, github: "elixir-nx/nx", sparse: "nx"}
+])
+```
+
+```elixir
+input = Kino.Input.textarea("Input:")
+```
+
+## First part
+
+```elixir
+[row | boards] =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n\n", trim: true)
+
+row =
+  row
+  |> String.split(",", trim: true)
+  |> Enum.map(&String.to_integer(&1))
+
+boards =
+  boards
+  |> Enum.map(fn el ->
+    String.split(el, "\n", trim: true)
+    |> Enum.map(fn el ->
+      el
+      |> String.split("\s", trim: true)
+      |> Enum.map(&String.to_integer(&1))
+    end)
+  end)
+```
+
+```elixir
+defmodule Recur do
+  def recur(data, boards) do
+    {number, new_data} = List.pop_at(data, 0)
+
+    new_boards =
+      boards
+      |> Enum.map(&mark_number(&1, number))
+
+    bingo_board =
+      new_boards
+      |> Enum.find(fn el -> has_bingo(el) end)
+
+    if bingo_board, do: {number, bingo_board}, else: recur(new_data, new_boards)
+  end
+
+  defp mark_number(board, number) do
+    board
+    |> Enum.map(fn y ->
+      Enum.map(y, fn
+        x when x === number ->
+          :marked
+
+        x ->
+          x
+      end)
+    end)
+  end
+
+  defp has_bingo(board) do
+    x_axis =
+      board
+      |> Enum.any?(fn el ->
+        Enum.all?(el, fn i -> i === :marked end)
+      end)
+
+    y_axis =
+      board
+      |> Enum.zip()
+      |> Enum.map(&Tuple.to_list(&1))
+      |> Enum.any?(fn el ->
+        Enum.all?(el, fn i -> i === :marked end)
+      end)
+
+    x_axis || y_axis
+  end
+end
+```
+
+```elixir
+{number, board} = Recur.recur(row, boards)
+
+sum =
+  board
+  |> Enum.reduce(0, fn row, sum ->
+    sum +
+      Enum.reduce(row, 0, fn el, row_sum ->
+        row_sum + if el === :marked, do: 0, else: el
+      end)
+  end)
+
+sum * number
+```
+
+## Second part
