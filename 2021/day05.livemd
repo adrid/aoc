@@ -1,0 +1,76 @@
+<!-- vim: syntax=markdown -->
+
+# Day 5
+
+## Init
+
+```elixir
+Mix.install([
+  {:kino, github: "livebook-dev/kino"}
+])
+```
+
+```elixir
+input = Kino.Input.textarea("Input:")
+```
+
+```elixir
+data =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n", trim: true)
+  |> Enum.map(fn row ->
+    row
+    |> String.split(" -> ", trim: true)
+    |> Enum.map(fn el -> String.split(el, ",", trim: true) |> Enum.map(&String.to_integer(&1)) end)
+  end)
+```
+
+## First part
+
+```elixir
+data
+|> Enum.filter(fn [[x1, y1], [x2, y2]] ->
+  x1 == x2 || y1 == y2
+end)
+|> Enum.reduce([], fn [[x1, y1], [x2, y2]], acc ->
+  x_line = x1 === x2
+
+  range = if x_line === false, do: x1..x2, else: y1..y2
+  acc ++ for n <- range, do: if(x_line === false, do: [n, y1], else: [x1, n])
+end)
+|> Enum.frequencies()
+|> Enum.to_list()
+|> Enum.filter(fn {_, frequency} -> frequency >= 2 end)
+|> Enum.count()
+```
+
+## Second part
+
+```elixir
+data
+|> Enum.reduce([], fn [[x1, y1], [x2, y2]], acc ->
+  x_range = x1..x2
+  y_range = y1..y2
+
+  biggest_range = if Enum.count(x_range) > Enum.count(y_range), do: x_range, else: y_range
+
+  {list, _, _} =
+    Enum.reduce(
+      biggest_range |> Enum.to_list(),
+      {[], x_range |> Enum.to_list(), y_range |> Enum.to_list()},
+      fn _range, {list, ax_range, ay_range} ->
+        {x, new_x_range} = List.pop_at(ax_range, 0, Enum.at(x_range, 0))
+        {y, new_y_range} = List.pop_at(ay_range, 0, Enum.at(y_range, 0))
+
+        {list ++ [[x, y]], new_x_range, new_y_range}
+      end
+    )
+
+  acc ++ list
+end)
+|> Enum.frequencies()
+|> Enum.to_list()
+|> Enum.filter(fn {_, frequency} -> frequency >= 2 end)
+|> Enum.count()
+```

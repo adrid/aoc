@@ -1,0 +1,67 @@
+<!-- vim: syntax=markdown -->
+
+# Day 5
+
+## Init
+
+```elixir
+Mix.install([
+  {:kino, github: "livebook-dev/kino"}
+])
+```
+
+```elixir
+input = Kino.Input.textarea("Input:")
+```
+
+```elixir
+data =
+  input
+  |> Kino.Input.read()
+  |> String.split(",", trim: true)
+  |> Enum.map(&String.to_integer(&1))
+```
+
+## First part
+
+```elixir
+1..80
+|> Enum.reduce(data, fn _, acc ->
+  {new_data, new_acc} =
+    acc
+    |> Enum.map_reduce([], fn item, acc ->
+      new_value = item - 1
+
+      if new_value === -1 do
+        {6, acc ++ [8]}
+      else
+        {new_value, acc}
+      end
+    end)
+
+  new_data ++ new_acc
+end)
+|> Enum.count()
+```
+
+## Second part
+
+```elixir
+1..256
+|> Enum.reduce(data, fn _, acc ->
+  {new_data, new_acc} =
+    acc
+    |> Enum.map_reduce([], fn item, acc ->
+      new_value = item - 1
+
+      if new_value === -1 do
+        {6, acc ++ [8]}
+      else
+        {new_value, acc}
+      end
+    end)
+
+  new_data ++ new_acc
+end)
+|> Enum.count()
+```
