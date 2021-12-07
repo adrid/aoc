@@ -1,0 +1,56 @@
+<!-- vim: syntax=markdown -->
+
+# Day 7
+
+## Init
+
+```elixir
+Mix.install([
+  {:kino, github: "livebook-dev/kino"}
+])
+```
+
+```elixir
+input = Kino.Input.textarea("Input:")
+```
+
+```elixir
+data =
+  input
+  |> Kino.Input.read()
+  |> String.split(",", trim: true)
+  |> Enum.map(&String.to_integer(&1))
+```
+
+## First part
+
+```elixir
+Enum.min(data)..Enum.max(data)
+|> Enum.map(fn pos ->
+  {pos,
+   Enum.map(data, fn cost_pos ->
+     abs(pos - cost_pos)
+   end)}
+end)
+|> Enum.map(fn {pos, cost_list} ->
+  {pos, Enum.sum(cost_list)}
+end)
+|> Enum.min_by(fn {_, sum} -> sum end)
+```
+
+## Second part
+
+```elixir
+Enum.min(data)..Enum.max(data)
+|> Enum.map(fn pos ->
+  {pos,
+   Enum.map(data, fn cost_pos ->
+     cost = abs(pos - cost_pos)
+     Enum.sum(0..cost)
+   end)}
+end)
+|> Enum.map(fn {pos, cost_list} ->
+  {pos, Enum.sum(cost_list)}
+end)
+|> Enum.min_by(fn {_, sum} -> sum end)
+```

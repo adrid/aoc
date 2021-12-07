@@ -1,6 +1,6 @@
 <!-- vim: syntax=markdown -->
 
-# Day 5
+# Day 6
 
 ## Init
 
@@ -47,21 +47,24 @@ end)
 ## Second part
 
 ```elixir
+frequencies =
+  data
+  |> Enum.frequencies()
+  |> Enum.to_list()
+  |> Enum.map(fn {_, i} -> i end)
+
+frequencies = [0] ++ frequencies ++ [0, 0, 0]
+```
+
+```elixir
 1..256
-|> Enum.reduce(data, fn _, acc ->
-  {new_data, new_acc} =
-    acc
-    |> Enum.map_reduce([], fn item, acc ->
-      new_value = item - 1
-
-      if new_value === -1 do
-        {6, acc ++ [8]}
-      else
-        {new_value, acc}
-      end
-    end)
-
-  new_data ++ new_acc
+|> Enum.reduce(frequencies, fn _, acc ->
+  acc
+  |> List.to_tuple()
+  |> then(fn {d0, d1, d2, d3, d4, d5, d6, d7, d8} ->
+    {d1, d2, d3, d4, d5, d6, d7 + d0, d8, d0}
+  end)
+  |> Tuple.to_list()
 end)
-|> Enum.count()
+|> Enum.sum()
 ```
