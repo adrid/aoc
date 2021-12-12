@@ -1,0 +1,26 @@
+<!-- vim: syntax=markdown -->
+
+# Day 10
+
+## Init
+
+```elixir
+Mix.install([
+  {:kino, github: "livebook-dev/kino"}
+])
+```
+
+```elixir
+input = Kino.Input.textarea("Input:")
+```
+
+```elixir
+data =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n", trim: true)
+```
+
+## First part
+
+## Second part

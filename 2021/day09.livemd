@@ -28,4 +28,71 @@ data =
 
 ## First part
 
+```elixir
+row_size = data |> Enum.at(0) |> length()
+flat_data = Enum.flat_map(data, & &1)
+
+index_fn = fn
+  i when i >= 0 -> Enum.at(flat_data, i)
+  _ -> nil
+end
+
+points =
+  flat_data
+  |> Enum.with_index()
+  |> Enum.filter(fn {el, index} ->
+    left = index_fn.(index - 1)
+    right = index_fn.(index + 1)
+    bottom = index_fn.(index + row_size)
+    top = index_fn.(index - row_size)
+
+    [left, right, bottom, top]
+    |> Enum.all?(&(el < &1))
+  end)
+```
+
+```elixir
+points
+|> Enum.map(fn {el, _} -> el + 1 end)
+|> Enum.sum()
+```
+
 ## Second part
+
+```elixir
+defmodule Recur do
+  def get_by_index(list, i) when i >= 0, do: Enum.find(list, {nil, i}, fn {_, li} -> li === i end)
+  def get_by_index(_, i), do: {nil, i}
+
+  def recur(set, {num, index}, list, row_size) do
+    left =
+      if rem(index - 1, row_size) === row_size - 1,
+        do: {nil, -1},
+        else: get_by_index(list, index - 1)
+
+    right = if rem(index + 1, row_size) === 0, do: {nil, -1}, else: get_by_index(list, index + 1)
+    bottom = get_by_index(list, index + row_size)
+    top = get_by_index(list, index - row_size)
+
+    if num in [9, nil] or index in set do
+      set
+    else
+      set
+      |> MapSet.put(index)
+      |> Recur.recur(left, list, row_size)
+      |> Recur.recur(right, list, row_size)
+      |> Recur.recur(bottom, list, row_size)
+      |> Recur.recur(top, list, row_size)
+    end
+  end
+end
+
+points
+|> Enum.map(fn point ->
+  Recur.recur(MapSet.new(), point, Enum.with_index(flat_data), row_size)
+  |> MapSet.size()
+end)
+|> Enum.sort(:desc)
+|> Enum.take(3)
+|> Enum.product()
+```
