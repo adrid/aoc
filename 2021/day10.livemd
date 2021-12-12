@@ -23,4 +23,74 @@ data =
 
 ## First part
 
+```elixir
+defmodule Subsystem do
+  def parse(line), do: parse(line, [])
+
+  def parse(<<?(, r::binary>>, list), do: parse(r, [?) | list])
+  def parse(<<?[, r::binary>>, list), do: parse(r, [?] | list])
+  def parse(<<?{, r::binary>>, list), do: parse(r, [?} | list])
+  def parse(<<?<, r::binary>>, list), do: parse(r, [?> | list])
+
+  def parse(<<char, r::binary>>, [char | list]), do: parse(r, list)
+
+  def parse(<<char, _r::binary>>, _list), do: {:invalid, char}
+
+  def parse(<<>>, []), do: :valid
+
+  def parse(<<>>, list), do: {:incomplete, list}
+end
+
+points = %{
+  ?) => 3,
+  ?] => 57,
+  ?} => 1197,
+  ?> => 25137
+}
+
+data
+|> Enum.map(&Subsystem.parse(&1))
+|> Enum.filter(fn
+  {:invalid, _} ->
+    true
+
+  _ ->
+    false
+end)
+|> Enum.map(fn {:invalid, char} ->
+  points[char]
+end)
+|> Enum.sum()
+```
+
 ## Second part
+
+```elixir
+points = %{
+  ?) => 1,
+  ?] => 2,
+  ?} => 3,
+  ?> => 4
+}
+
+data
+|> Enum.map(&Subsystem.parse(&1))
+|> Enum.filter(fn
+  {:incomplete, _} ->
+    true
+
+  _ ->
+    false
+end)
+|> Enum.map(fn {:incomplete, chars} ->
+  chars
+  |> Enum.reduce(0, fn char, acc ->
+    acc * 5 + points[char]
+  end)
+end)
+|> Enum.sort()
+|> then(fn list ->
+  list
+  |> Enum.at(div(Enum.count(list), 2))
+end)
+```
