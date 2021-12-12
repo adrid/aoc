@@ -1,0 +1,126 @@
+<!-- vim: syntax=markdown -->
+
+# Day 11
+
+## Init
+
+```elixir
+Mix.install([
+  {:kino, github: "livebook-dev/kino"}
+])
+```
+
+```elixir
+input = Kino.Input.textarea("Input:")
+```
+
+```elixir
+lines =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n", trim: true)
+
+grid =
+  for {line, row} <- Enum.with_index(lines),
+      {number, col} <- Enum.with_index(String.to_charlist(line)),
+      into: %{} do
+    {{row, col}, number - ?0}
+  end
+```
+
+## First part
+
+```elixir
+defmodule Recursion do
+  def recur(grid, {row, col}) do
+    if grid[{row, col}] === nil do
+      grid
+    else
+      grid = Map.update!(grid, {row, col}, &(&1 + 1))
+
+      if grid[{row, col}] === 10 do
+        grid
+        |> recur({row, col + 1})
+        |> recur({row, col - 1})
+        |> recur({row + 1, col})
+        |> recur({row - 1, col})
+        |> recur({row + 1, col + 1})
+        |> recur({row - 1, col - 1})
+        |> recur({row + 1, col - 1})
+        |> recur({row - 1, col + 1})
+      else
+        grid
+      end
+    end
+  end
+end
+```
+
+```elixir
+Enum.reduce(grid, grid, fn {item, _}, acc ->
+  acc
+  |> Recursion.recur(item)
+end)
+|> Enum.map(fn
+  {_, value} when value > 10 -> 0
+  {_, value} -> value
+end)
+|> Enum.filter(&(&1 === 0))
+|> Enum.count()
+```
+
+```elixir
+Enum.reduce(1..100, {0, grid}, fn _i, {counter, grid_acc} ->
+  new_grid =
+    Enum.reduce(grid, grid_acc, fn {item, _}, acc ->
+      acc
+      |> Recursion.recur(item)
+    end)
+    |> Enum.map(fn
+      {pos, value} when value >= 10 -> {pos, 0}
+      item -> item
+    end)
+
+  new_counter =
+    new_grid
+    |> Enum.map(fn {_pos, value} -> value end)
+    |> Enum.filter(&(&1 === 0))
+    |> Enum.count()
+
+  {new_counter + counter, Map.new(new_grid)}
+end)
+```
+
+## Second part
+
+```elixir
+defmodule Recur2 do
+  def calculate({step, counter, grid_acc}) do
+    new_grid =
+      Enum.reduce(grid_acc, grid_acc, fn {item, _}, acc ->
+        acc
+        |> Recursion.recur(item)
+      end)
+      |> Enum.map(fn
+        {pos, value} when value >= 10 -> {pos, 0}
+        item -> item
+      end)
+
+    new_counter =
+      new_grid
+      |> Enum.map(fn {_pos, value} -> value end)
+      |> Enum.filter(&(&1 === 0))
+      |> Enum.count()
+
+    response = {step + 1, new_counter + counter, Map.new(new_grid)}
+
+    if Enum.all?(new_grid, fn {_pos, value} -> value === 0 end) do
+      response
+    else
+      calculate(response)
+    end
+  end
+end
+
+Recur2.calculate({0, 0, grid})
+```
