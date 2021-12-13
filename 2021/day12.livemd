@@ -15,12 +15,118 @@ input = Kino.Input.textarea("Input:")
 ```
 
 ```elixir
-lines =
+paths =
   input
   |> Kino.Input.read()
   |> String.split("\n", trim: true)
+  |> Enum.map(&String.split(&1, "-"))
+```
+
+```elixir
+points =
+  paths
+  |> Enum.flat_map(& &1)
+  |> Enum.uniq()
+  |> Enum.map(fn point ->
+    {point,
+     paths
+     |> Enum.filter(fn [point1, point2] ->
+       point1 === point || point2 === point
+     end)
+     |> Enum.map(fn points ->
+       (points -- [point]) |> List.first()
+     end)}
+  end)
+  |> Map.new()
 ```
 
 ## First part
 
+```elixir
+defmodule Recur do
+  def recur(path_list, visted, current_point, current_point_paths, all_points, count) do
+    new_visited =
+      visted
+      |> Map.update(current_point, 1, &(&1 + 1))
+
+    if new_visited[current_point] > 1 && is_small_cave(current_point) do
+      count
+    else
+      count +
+        Enum.reduce(current_point_paths, count, fn next_point, acc ->
+          if next_point === "end" do
+            acc + 1
+          else
+            acc +
+              recur(
+                path_list ++ [next_point],
+                new_visited,
+                next_point,
+                all_points[next_point],
+                all_points,
+                count
+              )
+          end
+        end)
+    end
+  end
+
+  defp is_small_cave(point), do: point === String.downcase(point)
+end
+
+Recur.recur(["start"], %{}, "start", points["start"], points, 0)
+```
+
 ## Second part
+
+```elixir
+defmodule Recur do
+  def recur(
+        path_list,
+        visted,
+        current_point,
+        current_point_paths,
+        all_points,
+        count,
+        one_small_visited
+      ) do
+    new_visited =
+      visted
+      |> Map.update(current_point, 1, &(&1 + 1))
+
+    if ((new_visited[current_point] > 1 && one_small_visited) ||
+          (!one_small_visited && new_visited[current_point] > 2) ||
+          (new_visited[current_point] === 2 && current_point === "start")) &&
+         is_small_cave(current_point) do
+      count
+    else
+      one_small_visited =
+        if new_visited[current_point] >= 2 && is_small_cave(current_point),
+          do: true,
+          else: one_small_visited
+
+      count +
+        Enum.reduce(current_point_paths, count, fn next_point, acc ->
+          if next_point === "end" do
+            acc + 1
+          else
+            acc +
+              recur(
+                path_list ++ [next_point],
+                new_visited,
+                next_point,
+                all_points[next_point],
+                all_points,
+                count,
+                one_small_visited
+              )
+          end
+        end)
+    end
+  end
+
+  defp is_small_cave(point), do: point === String.downcase(point)
+end
+
+Recur.recur(["start"], %{}, "start", points["start"], points, 0, false)
+```

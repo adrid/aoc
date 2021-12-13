@@ -1,0 +1,40 @@
+<!-- vim: syntax=markdown -->
+
+# Day 13
+
+## Init
+
+```elixir
+Mix.install([
+  {:kino, github: "livebook-dev/kino"}
+])
+```
+
+```elixir
+input = Kino.Input.textarea("Input:")
+```
+
+```elixir
+[coordinates, instructions] =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n\n", trim: true)
+  |> then(fn [coordinates, instructions] ->
+    [
+      coordinates
+      |> String.split("\n")
+      |> Enum.map(&String.split(&1, ",", trim: true))
+      |> Enum.map(fn list -> list |> Enum.map(&String.to_integer(&1)) end),
+      instructions
+      |> String.split("\n")
+      |> Enum.map(fn
+        "fold along x=" <> rest -> {:x, rest |> String.to_integer()}
+        "fold along y=" <> rest -> {:y, rest |> String.to_integer()}
+      end)
+    ]
+  end)
+```
+
+## First part
+
+## Second part
