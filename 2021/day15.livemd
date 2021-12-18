@@ -1,0 +1,36 @@
+<!-- vim: syntax=markdown -->
+
+# Day 15
+
+## Init
+
+```elixir
+Mix.install([
+  {:kino, github: "livebook-dev/kino"}
+])
+```
+
+```elixir
+input = Kino.Input.textarea("Input:")
+```
+
+```elixir
+data =
+  input
+  |> Kino.Input.read()
+  |> String.split(["\n", "\r\n"], trim: true)
+  |> Enum.map(fn line ->
+    line |> String.split("", trim: true) |> Enum.map(&String.to_integer/1)
+  end)
+  |> then(fn data ->
+    for {line, row_index} <- Enum.with_index(data),
+        {cell, column_index} <- Enum.with_index(line),
+        into: %{} do
+      {{row_index, column_index}, cell}
+    end
+  end)
+```
+
+## First part
+
+## Second part
