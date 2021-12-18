@@ -24,7 +24,8 @@ input = Kino.Input.textarea("Input:")
       coordinates
       |> String.split("\n")
       |> Enum.map(&String.split(&1, ",", trim: true))
-      |> Enum.map(fn list -> list |> Enum.map(&String.to_integer(&1)) end),
+      |> Enum.map(fn list -> list |> Enum.map(&String.to_integer(&1)) end)
+      |> Enum.sort(),
       instructions
       |> String.split("\n")
       |> Enum.map(fn
@@ -37,4 +38,112 @@ input = Kino.Input.textarea("Input:")
 
 ## First part
 
+```elixir
+{max_x, max_y} =
+  coordinates
+  |> Enum.reduce({0, 0}, fn [x, y], {max_x, max_y} ->
+    {[max_x, x] |> Enum.max(), [max_y, y] |> Enum.max()}
+  end)
+
+[
+  instructions
+  |> List.first()
+]
+|> Enum.reduce({coordinates, max_x, max_y}, fn {direction, value}, {coordinates, max_x, max_y} ->
+  new_coordinates =
+    coordinates
+    |> Enum.filter(fn [x, y] ->
+      case direction do
+        :x -> x !== value
+        :y -> y !== value
+      end
+    end)
+    |> Enum.split_with(fn [x, y] ->
+      case direction do
+        :x -> x <= value
+        :y -> y <= value
+      end
+    end)
+    |> then(fn {first, second} ->
+      folded =
+        second
+        |> Enum.map(fn [x, y] ->
+          case direction do
+            :x -> [-(x - value * 2), y]
+            :y -> [x, -(y - value * 2)]
+          end
+        end)
+
+      (first ++ folded)
+      |> Enum.uniq()
+    end)
+
+  case direction do
+    :x -> {new_coordinates, value, max_y}
+    :y -> {new_coordinates, max_x, value}
+  end
+end)
+|> then(fn {marked_coordinates, _max_x, _max_y} ->
+  marked_coordinates |> Enum.count()
+end)
+```
+
 ## Second part
+
+```elixir
+{max_x, max_y} =
+  coordinates
+  |> Enum.reduce({0, 0}, fn [x, y], {max_x, max_y} ->
+    {[max_x, x] |> Enum.max(), [max_y, y] |> Enum.max()}
+  end)
+
+{marked, max_x, max_y} =
+  instructions
+  |> Enum.reduce({coordinates, max_x, max_y}, fn {direction, value},
+                                                 {coordinates, max_x, max_y} ->
+    new_coordinates =
+      coordinates
+      |> Enum.filter(fn [x, y] ->
+        case direction do
+          :x -> x !== value
+          :y -> y !== value
+        end
+      end)
+      |> Enum.split_with(fn [x, y] ->
+        case direction do
+          :x -> x <= value
+          :y -> y <= value
+        end
+      end)
+      |> then(fn {first, second} ->
+        folded =
+          second
+          |> Enum.map(fn [x, y] ->
+            case direction do
+              :x -> [-(x - value * 2), y]
+              :y -> [x, -(y - value * 2)]
+            end
+          end)
+
+        (first ++ folded)
+        |> Enum.uniq()
+      end)
+
+    case direction do
+      :x -> {new_coordinates, value, max_y}
+      :y -> {new_coordinates, max_x, value}
+    end
+  end)
+
+for y <- 0..max_y do
+  for x <- 0..max_x do
+    if Enum.member?(marked, [x, y]) do
+      IO.write('#')
+    else
+      IO.write(' ')
+    end
+  end
+
+  IO.puts("")
+end
+```

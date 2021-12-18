@@ -1,0 +1,113 @@
+<!-- vim: syntax=markdown -->
+
+# Day 14
+
+## Init
+
+```elixir
+Mix.install([
+  {:kino, github: "livebook-dev/kino"}
+])
+```
+
+```elixir
+input = Kino.Input.textarea("Input:")
+```
+
+```elixir
+{template, pairs} =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n\n", trim: true)
+  |> then(fn [polymer, insertion] ->
+    {
+      polymer,
+      insertion
+      |> String.split("\n", trim: true)
+      |> Enum.map(&String.split(&1, " -> "))
+    }
+  end)
+```
+
+## First part
+
+```elixir
+defmodule Recursion do
+  def recur(<<head::binary-size(1)>>, _pairs, output), do: output <> head
+
+  def recur(<<head::binary-size(2)>> <> rest, pairs, output) do
+    [first_letter, second_letter] = String.graphemes(head)
+
+    match =
+      pairs
+      |> Enum.find(fn [pair, _] ->
+        pair === head
+      end)
+
+    case match do
+      [_pair, new] ->
+        recur(second_letter <> rest, pairs, output <> first_letter <> new)
+
+      _ ->
+        recur(second_letter <> rest, pairs, output <> first_letter)
+    end
+  end
+end
+
+1..10
+|> Enum.reduce(template, fn _, output ->
+  Recursion.recur(output, pairs, "")
+end)
+|> String.graphemes()
+|> then(fn output ->
+  output
+  |> Enum.frequencies()
+  |> then(fn el ->
+    {
+      Enum.min(el, fn {_, i}, {_, j} -> i < j end),
+      Enum.max(el, fn {_, i}, {_, j} -> i > j end)
+    }
+  end)
+end)
+|> then(fn {{_, x}, {_, y}} -> y - x end)
+```
+
+## Second part
+
+```elixir
+defmodule Recursion do
+  def run(frequencies, pairs) do
+    frequencies
+    |> Enum.map(fn
+      {[x, y] = xy, count} ->
+        [{[x, pairs[xy]], count}, {[pairs[xy], y], count}]
+
+      x ->
+        x
+    end)
+    |> List.flatten()
+    |> Enum.reduce(%{}, fn {pair, count}, counts ->
+      Map.update(counts, pair, count, &(&1 + count))
+    end)
+  end
+end
+
+map_pairs =
+  pairs
+  |> Enum.map(fn [pair, match] -> {String.codepoints(pair), match} end)
+  |> Map.new()
+
+{{_, min}, {_, max}} =
+  template
+  |> String.codepoints()
+  |> Enum.chunk_every(2, 1)
+  |> Enum.frequencies()
+  |> Stream.iterate(&Recursion.run(&1, map_pairs))
+  |> Enum.at(40)
+  |> Enum.reduce(%{}, fn {chars, count}, counts ->
+    Map.update(counts, chars |> List.first(), count, &(&1 + count))
+  end)
+  |> Enum.min_max_by(fn {_, count} -> count end)
+
+max - min
+```
