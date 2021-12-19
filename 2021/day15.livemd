@@ -6,7 +6,8 @@
 
 ```elixir
 Mix.install([
-  {:kino, github: "livebook-dev/kino"}
+  {:kino, github: "livebook-dev/kino"},
+  {:libgraph, "~> 0.13.3"}
 ])
 ```
 
@@ -31,6 +32,136 @@ data =
   end)
 ```
 
+```elixir
+{max_x, max_y} =
+  data
+  |> Map.keys()
+  |> then(fn keys ->
+    keys
+    |> Enum.reduce({0, 0}, fn {x, y}, {max_x, max_y} ->
+      new_max_x = if x > max_x, do: x, else: max_x
+      new_max_y = if y > max_y, do: y, else: max_y
+      {new_max_x, new_max_y}
+    end)
+  end)
+```
+
 ## First part
 
+```elixir
+graph =
+  Graph.new()
+  |> Graph.add_vertices(data |> Map.keys())
+  |> then(fn graph ->
+    for y <- 0..max_y do
+      for x <- 0..max_x do
+        top = data[{x, y - 1}]
+        bottom = data[{x, y + 1}]
+        left = data[{x - 1, y}]
+        right = data[{x + 1, y}]
+
+        [
+          {{x, y - 1}, top},
+          {{x, y + 1}, bottom},
+          {{x - 1, y}, left},
+          {{x + 1, y}, right}
+        ]
+        |> Enum.filter(fn {_, weight} -> weight !== nil end)
+        |> Enum.map(fn {pos, weight} ->
+          {{x, y}, pos, weight: weight}
+        end)
+      end
+    end
+    |> List.flatten()
+    |> then(fn edges -> graph |> Graph.add_edges(edges) end)
+  end)
+```
+
+```elixir
+graph
+|> Graph.dijkstra({0, 0}, {max_x, max_y})
+|> Enum.drop(1)
+|> Enum.reduce(0, fn pos, acc ->
+  acc + data[pos]
+end)
+```
+
 ## Second part
+
+```elixir
+next_value = fn value, inc ->
+  value = value + inc
+  if value > 9, do: value - 9, else: value
+end
+
+grid_ends = fn grid ->
+  grid
+  |> Map.keys()
+  |> then(fn keys ->
+    keys
+    |> Enum.reduce({0, 0}, fn {x, y}, {max_x, max_y} ->
+      new_max_x = if x > max_x, do: x, else: max_x
+      new_max_y = if y > max_y, do: y, else: max_y
+      {new_max_x, new_max_y}
+    end)
+  end)
+end
+```
+
+```elixir
+data =
+  data
+  |> Enum.reduce(data, fn {{x, y}, weight}, data ->
+    Enum.reduce(1..4, data, fn index, data ->
+      Map.put(data, {x + index * (max_x + 1), y}, next_value.(weight, index))
+    end)
+  end)
+
+data =
+  data
+  |> Enum.reduce(data, fn {{x, y}, weight}, data ->
+    Enum.reduce(1..4, data, fn index, data ->
+      Map.put(data, {x, y + index * (max_y + 1)}, next_value.(weight, index))
+    end)
+  end)
+```
+
+```elixir
+{max_x, max_y} = grid_ends.(data)
+
+graph =
+  Graph.new()
+  |> Graph.add_vertices(data |> Map.keys())
+  |> then(fn graph ->
+    for x <- 0..max_x do
+      for y <- 0..max_y do
+        top = data[{x, y - 1}]
+        bottom = data[{x, y + 1}]
+        left = data[{x - 1, y}]
+        right = data[{x + 1, y}]
+
+        [
+          {{x, y - 1}, top},
+          {{x, y + 1}, bottom},
+          {{x - 1, y}, left},
+          {{x + 1, y}, right}
+        ]
+        |> Enum.filter(fn {_, weight} -> weight !== nil end)
+        |> Enum.map(fn {pos, weight} ->
+          {{x, y}, pos, weight: weight}
+        end)
+      end
+    end
+    |> List.flatten()
+    |> then(fn edges -> graph |> Graph.add_edges(edges) end)
+  end)
+```
+
+```elixir
+graph
+|> Graph.dijkstra({0, 0}, {max_x, max_y})
+|> Enum.drop(1)
+|> Enum.reduce(0, fn pos, acc ->
+  acc + data[pos]
+end)
+```
