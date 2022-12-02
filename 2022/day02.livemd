@@ -1,0 +1,113 @@
+# Day 2
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.7.0"}
+])
+```
+
+## Init
+
+```elixir
+input = Kino.Input.textarea("Input:")
+```
+
+```elixir
+data =
+  Kino.Input.read(input)
+  |> String.split("\n", trim: true)
+  |> Enum.map(&String.split(&1, " ", trim: true))
+```
+
+## Part 1
+
+```elixir
+shape = fn symbol ->
+  cond do
+    symbol == "A" or symbol == "X" -> :rock
+    symbol == "B" or symbol == "Y" -> :paper
+    symbol == "C" or symbol == "Z" -> :scissors
+  end
+end
+
+shape_score = fn shape ->
+  case shape do
+    :rock -> 1
+    :paper -> 2
+    :scissors -> 3
+  end
+end
+
+round_outcome = fn opponent, me ->
+  case {opponent, me} do
+    {x, y} when x == y -> [3, 3]
+    {:rock, y} when y == :paper -> [0, 6]
+    {:paper, y} when y == :rock -> [6, 0]
+    {:scissors, y} when y == :paper -> [6, 0]
+    {:paper, y} when y == :scissors -> [0, 6]
+    {:rock, y} when y == :scissors -> [6, 0]
+    {:scissors, y} when y == :rock -> [0, 6]
+  end
+end
+```
+
+```elixir
+data
+|> Enum.map(fn [opponent, me] ->
+  opponent_shape_score =
+    opponent
+    |> shape.()
+    |> shape_score.()
+
+  me_shape_score =
+    me
+    |> shape.()
+    |> shape_score.()
+
+  [round_outcome.(shape.(opponent), shape.(me)), [opponent_shape_score, me_shape_score]]
+  |> Enum.zip_with(fn [x, y] -> x + y end)
+end)
+|> Enum.reduce(0, fn [_, my_points], acc -> my_points + acc end)
+```
+
+## Part 2
+
+```elixir
+decision = fn symbol ->
+  case symbol do
+    "X" -> :lose
+    "Y" -> :draw
+    "Z" -> :win
+  end
+end
+
+shape_decision = fn my_decision, opponent_shape ->
+  case my_decision do
+    :win when opponent_shape == :rock -> :paper
+    :win when opponent_shape == :paper -> :scissors
+    :win when opponent_shape == :scissors -> :rock
+    :lose when opponent_shape == :rock -> :scissors
+    :lose when opponent_shape == :paper -> :rock
+    :lose when opponent_shape == :scissors -> :paper
+    :draw -> opponent_shape
+  end
+end
+```
+
+```elixir
+data
+|> Enum.map(fn [opponent, me] ->
+  opponent_shape_score =
+    opponent
+    |> shape.()
+    |> shape_score.()
+
+  my_decision = decision.(me)
+  my_shape = shape_decision.(my_decision, shape.(opponent))
+  me_shape_score = shape_score.(my_shape)
+
+  [round_outcome.(shape.(opponent), my_shape), [opponent_shape_score, me_shape_score]]
+  |> Enum.zip_with(fn [x, y] -> x + y end)
+end)
+|> Enum.reduce(0, fn [_, my_points], acc -> my_points + acc end)
+```
