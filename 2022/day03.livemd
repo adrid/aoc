@@ -1,0 +1,85 @@
+# Day 3
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.7.0"}
+])
+```
+
+## Init
+
+```elixir
+input = Kino.Input.textarea("Input")
+```
+
+```elixir
+data =
+  Kino.Input.read(input)
+  |> String.split("\n", trim: true)
+  |> Enum.map(&String.graphemes(&1))
+```
+
+## Part 1
+
+```elixir
+splitted =
+  data
+  |> Enum.map(&Enum.split(&1, &1 |> length() |> div(2)))
+  |> Enum.map(fn {x, y} -> {MapSet.new(x), MapSet.new(y)} end)
+```
+
+```elixir
+intersection_data =
+  splitted
+  |> Enum.map(fn {x, y} ->
+    MapSet.intersection(x, y)
+    |> Enum.fetch!(0)
+  end)
+```
+
+```elixir
+lowercase_map = Enum.zip(?a..?z, 1..26)
+uppercase_map = Enum.zip(?A..?Z, 27..52)
+
+letters_map =
+  (lowercase_map ++ uppercase_map)
+  |> Enum.map(fn {x, y} ->
+    {<<x::utf8>>, y}
+  end)
+  |> Enum.into(%{})
+```
+
+```elixir
+intersection_data
+|> Enum.map(fn letter ->
+  letters_map
+  |> Map.get(letter)
+end)
+|> Enum.sum()
+```
+
+## Part 2
+
+```elixir
+intersection_data =
+  data
+  |> Enum.chunk_every(3)
+  |> Enum.map(fn group ->
+    group
+    |> Enum.reduce(fn x, acc ->
+      x
+      |> MapSet.new()
+      |> MapSet.intersection(MapSet.new(acc))
+    end)
+    |> Enum.fetch!(0)
+  end)
+```
+
+```elixir
+intersection_data
+|> Enum.map(fn letter ->
+  letters_map
+  |> Map.get(letter)
+end)
+|> Enum.sum()
+```
