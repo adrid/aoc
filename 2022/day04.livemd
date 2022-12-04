@@ -43,7 +43,7 @@ end)
 ```elixir
 data
 |> Enum.filter(fn [x, y] ->
-  Enum.any?(y, &Enum.member?(x, &1)) or Enum.any?(x, &Enum.member?(y, &1))
+  Enum.any?(y, &Enum.member?(x, &1))
 end)
 |> Enum.count()
 ```

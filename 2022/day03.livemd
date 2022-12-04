@@ -51,10 +51,7 @@ letters_map =
 
 ```elixir
 intersection_data
-|> Enum.map(fn letter ->
-  letters_map
-  |> Map.get(letter)
-end)
+|> Enum.map(&Map.get(letters_map, &1))
 |> Enum.sum()
 ```
 
@@ -77,9 +74,6 @@ intersection_data =
 
 ```elixir
 intersection_data
-|> Enum.map(fn letter ->
-  letters_map
-  |> Map.get(letter)
-end)
+|> Enum.map(&Map.get(letters_map, &1))
 |> Enum.sum()
 ```
