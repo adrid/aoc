@@ -1,0 +1,49 @@
+# Day 4
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.7.0"}
+])
+```
+
+## Init
+
+```elixir
+input = Kino.Input.textarea("Input")
+```
+
+```elixir
+data =
+  Kino.Input.read(input)
+  |> String.split("\n", trim: true)
+  |> Enum.map(fn row ->
+    row
+    |> String.split(",")
+    |> Enum.map(&String.split(&1, "-"))
+    |> Enum.map(fn [x, y] ->
+      x = String.to_integer(x)
+      y = String.to_integer(y)
+      x..y
+    end)
+  end)
+```
+
+## Part1
+
+```elixir
+data
+|> Enum.filter(fn [x, y] ->
+  Enum.all?(y, &Enum.member?(x, &1)) or Enum.all?(x, &Enum.member?(y, &1))
+end)
+|> Enum.count()
+```
+
+## Part 2
+
+```elixir
+data
+|> Enum.filter(fn [x, y] ->
+  Enum.any?(y, &Enum.member?(x, &1)) or Enum.any?(x, &Enum.member?(y, &1))
+end)
+|> Enum.count()
+```
