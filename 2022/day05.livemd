@@ -1,0 +1,106 @@
+# Day 5
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.7.0"}
+])
+```
+
+## Init
+
+```elixir
+input = Kino.Input.textarea("Input")
+```
+
+```elixir
+[stack, instructions] =
+  Kino.Input.read(input)
+  |> String.split("\n\n", trim: true)
+```
+
+```elixir
+stack =
+  stack
+  |> String.split("\n", trim: true)
+
+instructions =
+  instructions
+  |> String.split("\n", trim: true)
+
+{positions, stack} =
+  stack
+  |> List.pop_at(-1)
+
+positions =
+  positions
+  |> String.split(" ", trim: true)
+  |> Enum.map(&String.to_integer(&1))
+
+stack =
+  stack
+  |> Enum.map(fn row ->
+    row
+    |> String.split("", trim: true)
+    |> Enum.chunk_every(4)
+    |> Enum.map(fn item ->
+      item
+      |> Enum.take(3)
+      |> Enum.at(1)
+    end)
+  end)
+```
+
+## Part 1
+
+```elixir
+length = length(positions) - 1
+
+columns =
+  for n <- 0..length do
+    stack
+    |> Enum.map(&Enum.at(&1, n))
+    |> Enum.filter(fn x -> x != " " end)
+  end
+```
+
+```elixir
+instructions
+|> Enum.reduce(columns, fn instruction, columns ->
+  %{"move" => move, "from" => from, "to" => to} =
+    ~r/move\s(?<move>\d+)\sfrom\s(?<from>\d+)\sto\s(?<to>\d+)/
+    |> Regex.named_captures(instruction)
+
+  move = String.to_integer(move)
+  from = String.to_integer(from) - 1
+  to = String.to_integer(to) - 1
+
+  to_add = Enum.take(Enum.at(columns, from), move) |> Enum.reverse()
+  from_column = Enum.drop(Enum.at(columns, from), move)
+  columns = List.replace_at(columns, from, from_column)
+  List.replace_at(columns, to, to_add ++ Enum.at(columns, to))
+end)
+|> Enum.map(&Enum.at(&1, 0))
+|> List.to_string()
+```
+
+## Part 2
+
+```elixir
+instructions
+|> Enum.reduce(columns, fn instruction, columns ->
+  %{"move" => move, "from" => from, "to" => to} =
+    ~r/move\s(?<move>\d+)\sfrom\s(?<from>\d+)\sto\s(?<to>\d+)/
+    |> Regex.named_captures(instruction)
+
+  move = String.to_integer(move)
+  from = String.to_integer(from) - 1
+  to = String.to_integer(to) - 1
+
+  to_add = Enum.take(Enum.at(columns, from), move)
+  from_column = Enum.drop(Enum.at(columns, from), move)
+  columns = List.replace_at(columns, from, from_column)
+  List.replace_at(columns, to, to_add ++ Enum.at(columns, to))
+end)
+|> Enum.map(&Enum.at(&1, 0))
+|> List.to_string()
+```
