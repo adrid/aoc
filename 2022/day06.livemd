@@ -1,0 +1,53 @@
+# Day 6
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.8.0"}
+])
+```
+
+## Init
+
+```elixir
+input = Kino.Input.textarea("Input")
+```
+
+```elixir
+data = Kino.Input.read(input)
+```
+
+## Part 1
+
+```elixir
+data
+|> String.graphemes()
+|> Enum.reduce_while({0, []}, fn
+  x, {i, acc} when length(acc) < 4 ->
+    {:cont, {i + 1, acc ++ [x]}}
+
+  x, {i, acc} ->
+    if Enum.frequencies(acc) |> Enum.to_list() |> length() === 4 do
+      {:halt, i}
+    else
+      {:cont, {i + 1, Enum.drop(acc, 1) ++ [x]}}
+    end
+end)
+```
+
+## Part 2
+
+```elixir
+data
+|> String.graphemes()
+|> Enum.reduce_while({0, []}, fn
+  x, {i, acc} when length(acc) < 14 ->
+    {:cont, {i + 1, acc ++ [x]}}
+
+  x, {i, acc} ->
+    if Enum.frequencies(acc) |> Enum.to_list() |> length() === 14 do
+      {:halt, i}
+    else
+      {:cont, {i + 1, Enum.drop(acc, 1) ++ [x]}}
+    end
+end)
+```
